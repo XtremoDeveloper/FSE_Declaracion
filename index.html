@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Evaluación Socioeconómica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+        }
+        
+        .paper-sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 12mm 12mm;
+            margin: 20px auto;
+            position: relative;
+        }
+        
+        .hidden-page {
+            display: none !important;
+        }
+        
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            table-layout: fixed;
+            /* Fuerza a que las celdas respeten el ancho asignado */
+        }
+        
+        .form-table th,
+        .form-table td {
+            border: 1px solid #333;
+            padding: 10px;
+            vertical-align: middle;
+        }
+        
+        .bg-section {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        
+        .label-gray {
+            background-color: #ededed;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .header-main {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+        
+        .header-sub {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .editable {
+            outline: none;
+            min-height: 14px;
+        }
+        
+        .editable:focus {
+            background-color: #fffde7;
+        }
+        
+        .square-check {
+            width: 16px;
+            height: 16px;
+            border: 1.2px solid #333;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            margin: 0 2px;
+            background: white;
+            user-select: none;
+            content: "X";
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #000;
+        }
+        
+        .nav-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 8px 24px;
+            border-radius: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            border: 1px solid #ddd;
+        }
+        
+        .disclaimer {
+            font-size: 9px;
+            line-height: 1.2;
+            margin-top: 15px;
+            text-align: justify;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #333;
+            width: 200px;
+            margin-top: 40px;
+            margin-bottom: 5px;
+        }
+        
+        #success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: none;
+        }
+        
+        @media print {
+            .nav-container {
+                display: none;
+            }
+            body {
+                background: white;
+            }
+            .paper-sheet {
+                box-shadow: none;
+                margin: 0;
+                padding: 10mm;
+            }
+        }
+        /* Estilos específicos para la carga de firmas */
+        
+        .signature-box {
+            width: 200px;
+            height: 60px;
+            border-bottom: 1px solid #333;
+            margin-top: 20px;
+            margin-bottom: 5px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #fcfcfc;
+        }
+        
+        .signature-box:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .signature-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .signature-placeholder {
+            font-size: 8px;
+            color: #999;
+            text-align: center;
+        }
+        
+        @media print {
+            .signature-box {
+                background-color: transparent;
+                border-bottom: 1px solid #333;
+            }
+            .signature-placeholder {
+                display: none;
+            }
+        }
+        /*  ENCABEZADO*/
+        
+        .header-logos {
+            position: relative;
+            width: 100%;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .logo-left {
+            opacity: 0.7;
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 50px;
+        }
+        
+        .logo-right {
+            opacity: 0.7;
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 50px;
+        }
+        
+        img {
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+        
+        img {
+            -webkit-user-drag: none;
+            user-select: none;
+            pointer-events: none;
+            /* opcional: bloquea interacción completa */
+        }
+        
+        .square-check:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .square-check.checked::after {
+            content: "X";
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Mensaje de Éxito Custom -->
+    <div id="success-message" class="bg-green-600 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-bounce">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span class="font-bold">¡Ficha enviada correctamente!</span>
+    </div>
+
+    <!-- HOJA 1 -->
+    <div class="paper-sheet page-item" id="page-1">
+        <div class="header-logos">
+            <img src="logo-izquierda.png" class="logo-left">
+            <img src="logo-derecha.png" class="logo-right">
+        </div>
+        <div class="header-main">FICHA DE EVALUACIÓN SOCIOECONÓMICA</div>
+        <div class="header-sub">DECLARACIÓN JURADA</div>
+
+        <table class="form-table">
+            <tr>
+                <td colspan="20" class="bg-section">I. INFORMACIÓN GENERAL DEL ESTUDIANTE</td>
+            </tr>
+            <tr class="label-gray">
+                <td colspan="7">Apellido paterno</td>
+                <td colspan="6">Apellido materno</td>
+                <td colspan="7">Nombres</td>
+            </tr>
+            <tr>
+                <td colspan="7" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+                <td colspan="6" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+                <td colspan="7" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="label-gray">Edad:</td>
+                <td colspan="1" class="editable" contenteditable="true" style="width: 40px;">...</td>
+                <td colspan="4" class="label-gray" colspan="1">Fecha de nacimiento</td>
+                <td colspan="4" class="text-center">
+                    <input type="date" class="w-full text-center border-none outline-none bg-transparent text-[11px]">
+                </td>
+                <td colspan="2" class="label-gray">Sexo</td>
+                <td colspan="1" class="text-center">
+                    F
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="1" class="text-center">
+                    M
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">DNI/CE</td>
+                <td colspan="3" class="editable" contenteditable="true">...</td>
+            </tr>
+            <tr class="label-gray">
+                <td colspan="7">Lugar de nacimiento / Región</td>
+                <td colspan="6">Provincia</td>
+                <td colspan="7">Distrito</td>
+            </tr>
+            <tr>
+                <td colspan="7" class="editable" contenteditable="true">...</td>
+                <td colspan="6" class="editable" contenteditable="true">...</td>
+                <td colspan="7" class="editable" contenteditable="true">...</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="label-gray">E-mail:</td>
+                <td colspan="3" class="editable" contenteditable="true" style="color:#999">...</td>
+                <td colspan="2" class="label-gray">Celular:</td>
+                <td colspan="3" class="editable" contenteditable="true">...</td>
+                <td colspan="3" class="label-gray">Telf:</td>
+                <td colspan="7" class="editable" contenteditable="true">...</td>
+            </tr>
+        </table>
+
+        <!-- ESTADO CIVIL -->
+        <table class="form-table">
+            <tr class="bg-section">
+                <td colspan="18">Estado civil</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="label-gray">Soltero</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Casado</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Conviviente</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Separado</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Divorciado</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Viudo</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5" class="text-right label-gray">N° hijosㅤㅤㅤㅤㅤㅤ</td>
+                <td colspan="13" class="editable text-center" contenteditable="true">...</td>
+            </tr>
+        </table>
+
+        <!-- DOMICILIO -->
+        <table class="form-table">
+            <tr class="bg-section">
+                <td colspan="6">Domicilio actual / Calle/Jjr/av.</td>
+                <td colspan="4">N°</td>
+                <td colspan="4">Mz</td>
+                <td colspan="4">Lote</td>
+                <td colspan="4">Comité</td>
+                <td colspan="4">Zona</td>
+            </tr>
+            <tr>
+                <td colspan="6" class="editable" contenteditable="true">...</td>
+                <td colspan="4" class="editable" contenteditable="true">...</td>
+                <td colspan="4" class="editable" contenteditable="true">...</td>
+                <td colspan="4" class="editable" contenteditable="true">...</td>
+                <td colspan="4" class="editable" contenteditable="true">...</td>
+                <td colspan="4" class="editable" contenteditable="true">...</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="label-gray">Departamento:</td>
+                <td colspan="2" class="editable" contenteditable="true" style="color:#999">...</td>
+                <td colspan="3" class="label-gray">Provincia</td>
+                <td colspan="8" class="editable" contenteditable="true">...</td>
+                <td colspan="2" class="label-gray">Distrito</td>
+                <td colspan="7" class="editable" contenteditable="true">...</td>
+            </tr>
+        </table>
+
+        <!-- INSTITUCIÓN PROCEDENCIA -->
+        <table class="form-table">
+            <tr>
+                <td rowspan="2" class="label-gray" style="width: 25%;">Institución educativa de procedencia</td>
+                <td colspan="4" class="label-gray">Particular / Privado</td>
+                <td colspan="4" class="label-gray">Parroquial</td>
+                <td colspan="4" class="label-gray">Nacional</td>
+                <td colspan="5" class="label-gray">Repitió algún año</td>
+                <td colspan="4" class="label-gray">Si</td>
+                <td colspan="4" class="label-gray">No</td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <div class="square-check" onclick="toggleCheck(this)"></div>
+                </td>
+
+                <td colspan="4">
+                    <div class="square-check" onclick="toggleCheck(this)"></div>
+                </td>
+                <td colspan="4">
+                    <div class="square-check" onclick="toggleCheck(this)"></div>
+                </td>
+                <td colspan="5">
+                    <div class="square-check" onclick="toggleCheck(this)"></div>
+                </td>
+                <td colspan="4">
+                    <div class="square-check" onclick="toggleCheck(this)"></div>
+                </td>
+                <td colspan="4">
+                    <div class="square-check" onclick="toggleCheck(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td rowspan="2" class="label-gray">Obtuvo una beca completa</td>
+                <td colspan="2" class="label-gray">Si</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">No</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">Obtuvo una beca parcial</td>
+                <td colspan="2" class="label-gray">Si</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">No</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">No obtuvo beca</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- PROGRAMA DE ESTUDIOS -->
+        <table class="form-table">
+            <tr class="bg-section">
+                <td colspan="12">PROGRAMA DE ESTUDIOS</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="label-gray">Programa de estudios:</td>
+                <td colspan="9" class="editable" contenteditable="true" style="color:#999">Nombre de la carrera...</td>
+            </tr>
+            <tr>
+                <td rowspan="2" class="label-gray">Ciclo / Periodo</td>
+                <td class="label-gray">I</td>
+                <td class="label-gray">II</td>
+                <td class="label-gray">III</td>
+                <td class="label-gray">IV</td>
+                <td class="label-gray">V</td>
+                <td class="label-gray">VI</td>
+                <td colspan="3" class="label-gray">N° créditos matriculados</td>
+                <td colspan="2" class="label-gray">UD desaprobadas</td>
+            </tr>
+            <tr>
+                <td class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="editable" contenteditable="true">...</td>
+                <td colspan="2" class="editable" contenteditable="true">...</td>
+            </tr>
+        </table>
+
+        <!-- COMPOSICIÓN FAMILIAR -->
+        <table class="form-table">
+            <tr class="bg-section">
+                <td colspan="8">II. COMPOSICIÓN FAMILIAR (Integrantes de su familia)</td>
+            </tr>
+            <tr colspan="2" class="label-gray" style="text-align: center; font-weight: bold;">
+                <td style="width: 25%;">Nombres y Apellidos</td>
+                <td>Parentesco</td>
+                <td>Sexo</td>
+                <td>Edad</td>
+                <td>Estado Civil</td>
+                <td>Grado Instrucción</td>
+                <td>Ocupación</td>
+                <td>Ingreso S/.</td>
+            </tr>
+            <tbody id="family-rows"></tbody>
+            <tr>
+                <td colspan="7" class="text-right font-bold bg-gray-50 uppercase">INGRESO TOTAL ESTIMADO</td>
+                <td colspan="1" class="editable" contenteditable="true">...</td>
+            </tr>
+        </table>
+
+        <table class="form-table">
+            <tr>
+                <td colspan="21" class="bg-section">III. SITUACIÓN FAMILIAR (Integrantes de la familia que viven en su hogar)</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="label-gray" rowspan="2">Ud. vive con</td>
+                <td colspan="2" class="label-gray">Padre</td>
+                <td colspan="2" class="label-gray">Madre</td>
+                <td colspan="2" class="label-gray">Ambos</td>
+                <td colspan="2" class="label-gray">Hermanos</td>
+                <td colspan="2" class="label-gray">Sólo(a)</td>
+                <td colspan="2" class="label-gray">Cónyuge</td>
+                <td colspan="3" class="label-gray">Con amigos</td>
+                <td colspan="3" class="label-gray">Otros familiares</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" class="label-gray">Las relaciones familiares son</td>
+                <td colspan="2" class="label-gray">Buenas</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Regulares</td>
+                <td colspan="2" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Deficientes</td>
+                <td colspan="2" class="text-center" colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">malas</td>
+                <td colspan="2" class="text-center" colspan="3">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="form-table">
+            <tr>
+                <td class="label-gray" style="background-color:#d9e1f2; width: 25%;">Apoderado o Familiar de contacto</td>
+                <td colspan="7" class="editable" contenteditable="true">...</td>
+                <td colspan="2" class="label-gray" style="background-color:#d9e1f2;">Celular</td>
+                <td colspan="2" class="editable" contenteditable="true">...</td>
+            </tr>
+            <tr>
+                <td class="label-gray" style="background-color:#d9e1f2;">Ocupación</td>
+                <td colspan="11" class="editable" contenteditable="true">...</td>
+            </tr>
+        </table>
+
+        <div class="absolute bottom-4 right-8 text-[10px] text-gray-400 italic">Página 1 de 2</div>
+    </div>
+
+    <!-- HOJA 2 -->
+    <div class="paper-sheet page-item hidden-page" id="page-2">
+        <div class="header-logos">
+            <img src="logo-izquierda.png" class="logo-left">
+            <img src="logo-derecha.png" class="logo-right">
+        </div>
+
+        <table class="form-table">
+            <tr>
+                <td colspan="13" class="bg-section">VIDA SOCIAL</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="label-gray">¿Haces amigos con facilidad <br> entre tus compañeros de clase?</td>
+                <td colspan="1" class="label-gray">Si</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="1" class="label-gray">No</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">¿Qué deporte(s) practicas?</td>
+                <td colspan="3" class="editable" contenteditable="true" style="color:#999">...</td>
+
+            </tr>
+            <tr>
+                <td colspan="3" class="label-gray">¿Prefieres estar solo?</td>
+                <td colspan="2" class="label-gray">Si</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">No</td>
+                <td>
+                    <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">¿Cómo ocupas tu tiempo libre?</td>
+                <td colspan="2" class="editable" contenteditable="true" style="color:#999">...</td>
+
+            </tr>
+        </table>
+
+        <table class="form-table">
+            <tr>
+                <td colspan="87" class="bg-section">IV. ASPECTO ECONÓMICO (Integrantes de la familia que viven en su hogar)</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="label-gray">Dependencia económica</td>
+                <td colspan="8" class="label-gray">Sólo padre</td>
+                <td colspan="5" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="8" class="label-gray">Sólo madre</td>
+                <td colspan="5" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="8" class="label-gray">Ambos</td>
+                <td colspan="5" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="10" class="label-gray">Hermanos</td>
+                <td colspan="5" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="8" class="label-gray">Parientes</td>
+                <td colspan="5" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="6" class="label-gray">De sí mismo</td>
+                <td colspan="4" class="text-center">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="30" class="label-gray">Otros </td>
+                <td colspan="57" class="editable" contenteditable="true" style="color:#999">Escriba aquí...</td>
+            </tr>
+            <tr>
+                <td colspan="18" class="label-gray" colspan="2">Trabaja/ha trabajado anteriormente</td>
+                <td colspan="8" class="label-gray">Sí</td>
+                <td colspan="6">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="8" class="label-gray">No</td>
+                <td colspan="5">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td class="label-gray" colspan="15">Continuará trabajando</td>
+                <td colspan="8" class="label-gray">Sí</td>
+                <td colspan="6">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="8" class="label-gray">No</td>
+                <td colspan="5">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="20" class="label-gray">Nombre de la Empresa</td>
+                <td colspan="37" class="editable" contenteditable="true" style="color:#999">...</td>
+                <td colspan="15" class="label-gray">Cargo</td>
+                <td colspan="15" class="editable" contenteditable="true" style="color:#999">...</td>
+
+            </tr>
+            <tr>
+                <td colspan="14" class="label-gray">Tipo de trabajo</td>
+                <td colspan="15" class="label-gray">Dependiente</td>
+                <td colspan="5">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="15" class="label-gray">Independiente</td>
+                <td colspan="5">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="18" class="label-gray">Sueldo mensual S/.</td>
+                <td colspan="15" class="editable" contenteditable="true" style="color:#8d8c8c">...</td>
+
+            </tr>
+        </table>
+
+        <table class="form-table">
+            <tr>
+                <td colspan="32" class="bg-section">V. VIVIENDA Y SERVICIOS (donde reside actualmente)</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="label-gray">Tenencia de la vivienda</td>
+                <td colspan="3" class="label-gray">Propia</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Alquilada</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">Alquiler venta</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Alojado</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">Guardianía</td>
+                <td colspan="3">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="11" class="label-gray">Otro (especifique)</td>
+                <td colspan="21" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="label-gray">Tipo de vivienda</td>
+                <td colspan="2" class="label-gray">Casa</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">departamento</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">habitación</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="6" class="label-gray">N° habitaciones sin contar baños</td>
+                <td colspan="6" class="editable" contenteditable="true" style="color:#666">...</td>
+            </tr>
+            <tr>
+                <td colspan="11" class="label-gray">Otro (especifique)</td>
+                <td colspan="21" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="label-gray">Material de construcción
+                </td>
+                <td colspan="3" class="label-gray">Noble</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Drywall</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Adobe</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Madera</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="5" class="label-gray">Cartón/plástico</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="11" class="label-gray">Otro (especifique)</td>
+                <td colspan="21" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="label-gray">Condición</td>
+                <td colspan="4" class="label-gray">Terminada</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="5" class="label-gray">En construcción</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">Provisión</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">N° de piso</td>
+                <td colspan="5">
+                    <div class="editable" contenteditable="true" style="color:#666">...</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="9" class="label-gray">N° de dormitorios </td>
+                <td colspan="7">
+                    <div class="editable" contenteditable="true">...</div>
+                </td>
+                <td colspan="9" class="label-gray">N° de baños </td>
+                <td colspan="7">
+                    <div class="editable" contenteditable="true">...</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" class="label-gray">Servicios</td>
+                <td colspan="2" class="label-gray">Luz</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Agua</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Desagüe</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Teléfono</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Internet</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Tv cable</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+        </table>
+
+
+
+        <table class="form-table">
+
+
+            <tr>
+                <td colspan="26" class="bg-section">VII. SALUD (del estudiante)</td>
+            </tr>
+            <tr>
+                <td colspan="7" class="label-gray" style="width:15%">Tipo de seguro de salud</td>
+                <td colspan="3" class="label-gray">ESSALUD</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">SIS</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">EPS</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray" colspan="2">Ninguno</td>
+                <td colspan="3">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+            </tr>
+            <tr>
+                <td colspan="10" class="label-gray">Otro (especifique)</td>
+                <td colspan="16" class="editable" contenteditable="true" style="color:#666">Escriba aquí...</td>
+            </tr>
+            <tr>
+                <td colspan="6" class="label-gray" rowspan="4">Problemas de salud que requieren tratamiento continuo</td>
+                <td colspan="10" class="label-gray">En...</td>
+                <td colspan="10" class="label-gray">Alergias</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="editable" contenteditable="true">...</td>
+                <td colspan="10" class="editable" contenteditable="true">...</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="editable" contenteditable="true">...</td>
+                <td colspan="10" class="editable" contenteditable="true">...</td>
+            </tr>
+            <tr>
+                <td colspan="10" class="editable" contenteditable="true">...</td>
+                <td colspan="10" class="editable" contenteditable="true">...</td>
+            </tr>
+            </tr>
+
+            <tr>
+                <td colspan="6" class="label-gray" style="width:15%">Presenta alguna discapacidad</td>
+                <td colspan="3" class="label-gray" colspan="2">Si</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray" colspan="2">No</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="6" class="label-gray" colspan="2">Tipo</td>
+                <td colspan="4" colspan="4" class="editable" contenteditable="true">...</td>
+        </table>
+
+        <table class="form-table">
+            <tr>
+                <td colspan="26" class="bg-section">VII. ALIMENTACIÓN</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="label-gray" style="width:15%">Se alimenta en</td>
+                <td colspan="3" class="label-gray">Casa</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">Restaurante</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Pensión</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Quiosco</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="10" class="label-gray">Otro (especifique)</td>
+                <td colspan="16">
+                    <div class="editable" contenteditable="true" style="color:#666">...</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="label-gray" style="width:15%">Tipo de comidas al día
+                </td>
+                <td colspan="3" class="label-gray">Desayuno
+                </td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Almuerzo</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Cena</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="3" class="label-gray">Media mañana
+                </td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">Media tarde</td>
+                </td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8" class="label-gray" style="width:15%">Tuvo subsidio por alimentos en el instituto anteriormente
+                </td>
+                <td colspan="2" class="label-gray">Si
+                </td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="2" class="label-gray">No</td>
+                <td colspan="2">
+                    <div class="square-check" onclick="toggleX(this)"></div>
+                </td>
+                <td colspan="4" class="label-gray">Indique en qué año(s)</td>
+                <td colspan="6" class="editable" contenteditable="true">...
+                </td>
+            </tr>
+        </table>
+
+        <table>
+            <table class="form-table">
+                <tr>
+                    <td colspan="4" class="bg-section"> Sufres de alguna Enfermedad </td>
+                    <td colspan="5" class="text-center">
+                        Siㅤㅤ
+                        <div class="square-check" onclick="toggleX(this)"></div>
+                    </td>
+                    <td colspan="5" class="text-center">
+                        Noㅤㅤ
+                        <div class="square-check" onclick="toggleX(this)"></div>
+                        </tb>
+                </tr>
+                <tr>
+                    <td colspan="4" class="bg-section" styles=> ¿Cuál? </td>
+                    <td colspan="10" class="editable" contenteditable="true">...</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="bg-section" styles=> Tomas algún tipo de medicamento para tratar tu enfermedad </td>
+                    <td colspan="5" class="text-center">
+                        Siㅤㅤ
+                        <div class="square-check" onclick="toggleX(this)"></div>
+                    </td>
+                    <td colspan="5" class="text-center">
+                        Noㅤㅤ
+                        <div class="square-check" onclick="toggleX(this)"></div>
+                        </tb>
+                </tr>
+                <tr>
+                    <td colspan="4" class="bg-section"> ¿Cuál? </td>
+                    <td colspan="10" class="editable" contenteditable="true">...</td>
+                </tr>
+
+                <tr>
+                    <td colspan="4" class="bg-section"> Religión</td>
+                    <td colspan="10" class="editable" contenteditable="true">...</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="bg-section">¿Tienes algún estudio técnico o profesional? </td>
+                    <td colspan="5" class="text-center">
+                        Siㅤㅤ
+                        <div class="square-check" onclick="toggleX(this)"></div>
+                    </td>
+                    <td colspan="5" class="text-center">
+                        Noㅤㅤ
+                        <div colspan="2" class="square-check" onclick="toggleX(this)"></div>
+                        </tb>
+                </tr>
+                <tr>
+                    <td colspan="4" class="bg-section" styles=> Escriba el Estudio </td>
+                    <td colspan="10" class="editable" contenteditable="true">...</td>
+                </tr>
+            </table>
+
+            <div class="disclaimer">
+                <ul>
+                    <li>• La información contenida en el presente documento constituye declaración jurada.</li>
+                    <li>• La información falsa se someterá a las sanciones disciplinarias correspondientes según el artículo 411 del código penal.</li>
+                </ul>
+            </div>
+
+            <div class="max-w-2xl mx-auto bg-white p-10 shadow-lg">
+                <!-- SECCIÓN DE FIRMAS -->
+                <div class="mt-12 grid grid-cols-2 gap-8 text-[9px]">
+                    <div>
+                        <p>Fecha: <span class="editable w-32" contenteditable="true"></span></p>
+
+                        <!-- Firma Estudiante -->
+                        <div class="signature-box" onclick="triggerUpload('sig1')">
+                            <input type="file" id="sig1" class="hidden" accept="image/*" onchange="previewSignature(this)">
+                            <div class="signature-placeholder">Clic para subir Firma Estudiante</div>
+                        </div>
+                        <p class="font-bold">Firma del Estudiante</p>
+
+                        <!-- Firma Padre -->
+                        <div class="signature-box" onclick="triggerUpload('sig2')">
+                            <input type="file" id="sig2" class="hidden" accept="image/*" onchange="previewSignature(this)">
+                            <div class="signature-placeholder">Clic para subir Firma Padre/Apoderado</div>
+                        </div>
+                        <p class="font-bold">Firma del Padre o apoderado (Si es menor de edad)</p>
+                    </div>
+
+                    <div class="flex flex-col items-end justify-end">
+                        <!-- V°B° Bienestar -->
+                        <div class="signature-box" onclick="triggerUpload('sig3')">
+                            <input type="file" id="sig3" class="hidden" accept="image/*" onchange="previewSignature(this)">
+                            <div class="signature-placeholder">Clic para subir V°B° Bienestar</div>
+                        </div>
+                        <p class="text-right font-bold">V°B° Encargado de Bienestar y Empleabilidad</p>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute bottom-4 right-8 text-[10px] text-gray-400 italic">Página 2 de 2</div>
+    </div>
+
+    <!-- NAVEGACIÓN -->
+    <div class="nav-container">
+        <button id="prevBtn" class="px-6 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-30 font-bold transition-all">← Anterior</button>
+        <div id="indicator" class="flex items-center px-4 font-mono text-indigo-600 font-bold border-x border-gray-200">1 / 3</div>
+        <button id="nextBtn" class="px-6 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-30 font-bold transition-all">Siguiente →</button>
+
+        <!-- BOTÓN ENVIAR (OCULTO POR DEFECTO) -->
+        <button id="submitBtn" class="hidden px-8 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 font-bold transition-all shadow-lg flex items-center gap-2">
+            <span id="submitText">Enviar Ficha</span>
+            <svg id="submitLoading" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        let current = 1;
+        const total = 2;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const indicator = document.getElementById('indicator');
+        const pages = document.querySelectorAll('.page-item');
+        const successMsg = document.getElementById('success-message');
+
+        // Generar filas de tabla dinámicamente
+        const familyRows = document.getElementById('family-rows');
+        for (let i = 0; i < 9; i++) {
+            familyRows.innerHTML += `
+                <tr>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                    <td class="editable" contenteditable="true"></td>
+                </tr>
+            `;
+        }
+
+        function update() {
+            pages.forEach((p, i) => p.classList.toggle('hidden-page', (i + 1) !== current));
+            indicator.textContent = `${current} / ${total}`;
+
+            // Lógica de botones
+            prevBtn.disabled = (current === 1);
+
+            if (current === total) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
+                nextBtn.disabled = false;
+            }
+
+            window.scrollTo(0, 0);
+        }
+
+        function toggleX(el) {
+            el.textContent = el.textContent === 'X' ? '' : 'X';
+        }
+
+        prevBtn.onclick = () => {
+            if (current > 1) {
+                current--;
+                update();
+            }
+        };
+        nextBtn.onclick = () => {
+            if (current < total) {
+                current++;
+                update();
+            }
+        };
+
+        // Simulación de envío
+        // Envío real
+        submitBtn.onclick = async () => {
+    try {
+        const datos = {
+            apellido_paterno: document.querySelectorAll('.editable')[0].innerText.trim(),
+            apellido_materno: document.querySelectorAll('.editable')[1].innerText.trim(),
+            nombres: document.querySelectorAll('.editable')[2].innerText.trim(),
+            edad: document.querySelectorAll('.editable')[3].innerText.trim(),
+            dni: document.querySelectorAll('.editable')[4].innerText.trim()
+        };
+
+        const response = await fetch(
+          "https://script.google.com/macros/s/AKfycbw69U3zE-UBR3UXK2eVgnhmtqQQOPDi4871WbR03Rkql3Ax6vKRVkHAekfIjWODDB7cJw/exec",
+          {
+            method: "POST",
+            body: JSON.stringify(datos)
+          }
+        );
+
+        const resultado = await response.text();
+        alert(resultado);
+
+    } catch (error) {
+        console.log(error);
+        alert("Error al enviar");
+    }
+};
+
+
+        // Manejo de placeholders
+        document.querySelectorAll('.editable').forEach(el => {
+            el.addEventListener('focus', function() {
+                const placeholders = ['Escriba aquí...', 'Nombre de la carrera...', 'DD / MM / AAAA', '...'];
+                if (placeholders.includes(this.textContent.trim())) {
+                    this.textContent = '';
+                    this.style.color = '#333';
+                }
+            });
+        });
+
+        // Inicialización
+        update();
+    </script>
+    <script>
+        // Simula el click en el input file oculto
+        function triggerUpload(id) {
+            document.getElementById(id).click();
+        }
+
+        // Procesa la imagen y la muestra en el recuadro
+        function previewSignature(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const box = input.parentElement;
+                    const placeholder = box.querySelector('.signature-placeholder');
+
+                    if (placeholder) placeholder.style.display = 'none';
+
+                    // Eliminar imagen previa si existe para no duplicar
+                    const oldImg = box.querySelector('img');
+                    if (oldImg) oldImg.remove();
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    box.appendChild(img);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+
+
+
+        ///Marcar texto de cuadro "No obtuvo beca"
+        function toggleCheck(element) {
+            element.classList.toggle('checked');
+        }
+    </script>
+
+</body>
+
+</html>
