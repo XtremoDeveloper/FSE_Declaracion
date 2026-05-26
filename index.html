@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <style>
         body {
             background-color: #f3f4f6;
@@ -1428,6 +1429,34 @@
     </div>
 
     <script>
+        const canvas1 = document.getElementById("firma_estudiante");
+const canvas2 = document.getElementById("firma_padre");
+const canvas3 = document.getElementById("vb_bienestar");
+
+const signaturePad1 = new SignaturePad(canvas1);
+const signaturePad2 = new SignaturePad(canvas2);
+const signaturePad3 = new SignaturePad(canvas3);
+
+function resizeCanvas(canvas, pad) {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+
+    pad.clear();
+}
+
+resizeCanvas(canvas1, signaturePad1);
+resizeCanvas(canvas2, signaturePad2);
+resizeCanvas(canvas3, signaturePad3);
+
+window.addEventListener("resize", () => {
+    resizeCanvas(canvas1, signaturePad1);
+    resizeCanvas(canvas2, signaturePad2);
+    resizeCanvas(canvas3, signaturePad3);
+});
+        
         let current = 1;
         const total = 2;
         const prevBtn = document.getElementById('prevBtn');
@@ -1502,153 +1531,70 @@ function estaMarcado(field) {
 
         // Simulación de envío
         // Envío real
-        submitBtn.onclick = async() => {
-            try {
-                const datos = {
-                    apellido_paterno: document.getElementById("apellido_paterno").innerText.trim(),
-                    apellido_materno: document.getElementById("apellido_materno").innerText.trim(),
-                    nombres: document.getElementById("nombres").innerText.trim(),
-                    edad: document.getElementById("edad").innerText.trim(),
-                    fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
-                    sexo: obtenerValorGrupo("sexo"),
-                    dni: document.getElementById("dni").innerText.trim(),
-                    lugar_nacimiento_region: document.getElementById("lugar_nacimiento_region").innerText.trim(),
-                    provincia: document.getElementById("provincia").innerText.trim(),
-                    distrito: document.getElementById("distrito").innerText.trim(),
-                    email: document.getElementById("email").innerText.trim(),
-                    celular: document.getElementById("celular").innerText.trim(),
-                    telefono: document.getElementById("telefono").innerText.trim(),
-                    estado_civil: obtenerValorGrupo("estado_civil"),
-                    numero_hijos: document.getElementById("numero_hijos").innerText.trim(),
-                    domicilio_actual: document.getElementById("domicilio_actual").innerText.trim(),
-                    numero_domicilio: document.getElementById("numero_domicilio").innerText.trim(),
-                    manzana: document.getElementById("manzana").innerText.trim(),
-                    lote: document.getElementById("lote").innerText.trim(),
-                    comite: document.getElementById("comite").innerText.trim(),
-                    zona: document.getElementById("zona").innerText.trim(),
-                    departamento: document.getElementById("departamento").innerText.trim(),
-                    provincia1: document.getElementById("provincia1").innerText.trim(),
-                    distrito1: document.getElementById("distrito1").innerText.trim(),
-                    institucion_procedencia: obtenerValorGrupo("institucion_procedencia"),
-                    repitio_anio: obtenerValorGrupo("repitio_anio"),
-                    beca_completa: obtenerValorGrupo("beca_completa"),
-                    beca_parcial: obtenerValorGrupo("beca_parcial"),
-                    programa_estudios: document.getElementById("programa_estudios").innerText.trim(),
-                    ciclo_periodo: obtenerValorGrupo("ciclo_periodo"),
-                    creditos_matriculados: document.getElementById("creditos_matriculados").innerText.trim(),
-                    ud_desaprobadas: document.getElementById("ud_desaprobadas").innerText.trim(),
-                    ingreso_total: document.getElementById("ingreso_total").innerText.trim(),
-                    vive_con: obtenerValorGrupo("vive_con"),
-                    relaciones_familiares: obtenerValorGrupo("relaciones_familiares"),
-                    apoderado_familiar: document.getElementById("apoderado_familiar").innerText.trim(),
-                    celular1: document.getElementById("celular1").innerText.trim(),
-                    ocupacion1: document.getElementById("ocupacion1").innerText.trim(),
-                    hace_amigos: obtenerValorGrupo("hace_amigos"),
-                    que_deporte_practicas: document.getElementById("que_deporte_practicas").innerText.trim(),
-                    prefiere_solo: obtenerValorGrupo("prefiere_solo"),
-                    tu_tiempo_libre: document.getElementById("tu_tiempo_libre").innerText.trim(),
-                    dependencia_economica: obtenerValorGrupo("dependencia_economica"),
-                    otros: document.getElementById("otros").innerText.trim(),
-                    trabaja_anteriormente: obtenerValorGrupo("trabaja_anteriormente"),
-                    continuara_trabajando: obtenerValorGrupo("continuara_trabajando"),
-                    nombre_empresa: document.getElementById("nombre_empresa").innerText.trim(),
-                    cargo: document.getElementById("cargo").innerText.trim(),
-                    tipo_trabajo: obtenerValorGrupo("tipo_trabajo"),
-                    sueldo_mensual: document.getElementById("sueldo_mensual").innerText.trim(),
-                    tenencia_vivienda: obtenerValorGrupo("tenencia_vivienda"),
-                    otro_1: document.getElementById("otro_1").innerText.trim(),
-                    tipo_vivienda: obtenerValorGrupo("tipo_vivienda"),
-                    n_habitaciones: document.getElementById("n_habitaciones").innerText.trim(),
-                    otro_2: document.getElementById("otro_2").innerText.trim(),
-                    material_construccion: obtenerValorGrupo("material_construccion"),
-                    otro_3: document.getElementById("otro_3").innerText.trim(),
-                    condicion_vivienda: obtenerValorGrupo("condicion_vivienda"),
-                    numero_piso: document.getElementById("numero_piso").innerText.trim(),
-                    n_dormitorios: document.getElementById("n_dormitorios").innerText.trim(),
-                    n_banos: document.getElementById("n_banos").innerText.trim(),
-                    luz: estaMarcado("luz"),
-                    agua: estaMarcado("agua"),
-                    desague: estaMarcado("desague"),
-                    telefono_servicio: estaMarcado("telefono_servicio"),
-                    internet: estaMarcado("internet"),
-                    tv_cable: estaMarcado("tv_cable"),
-                    seguro_salud: obtenerValorGrupo("seguro_salud"),
-                    otro_4: document.getElementById("otro_4").innerText.trim(),
-                    tratamiento1: document.getElementById("tratamiento1").innerText.trim(),
-                    alergia1: document.getElementById("alergia1").innerText.trim(),
-                    tratamiento2: document.getElementById("tratamiento2").innerText.trim(),
-                    alergia2: document.getElementById("alergia2").innerText.trim(),
-                    tratamiento3: document.getElementById("tratamiento3").innerText.trim(),
-                    alergia3: document.getElementById("alergia3").innerText.trim(),
-                    presenta_discapacidad: obtenerValorGrupo("presenta_discapacidad"),
-                    tipo_discapacidad: document.getElementById("tipo_discapacidad").innerText.trim(),
-                    alimenta_en: obtenerValorGrupo("alimenta_en"),
-                    otro_5: document.getElementById("otro_5").innerText.trim(),
-                    tipo_comidas: obtenerValorGrupo("tipo_comidas"),
-                    subsidio_alimentos: obtenerValorGrupo("subsidio_alimentos"),
-                    indique_anio: document.getElementById("indique_anio").innerText.trim(),
-                    sufre_enfermedad: obtenerValorGrupo("sufre_enfermedad"),
-                    cual_1: document.getElementById("cual_1").innerText.trim(),
-                    toma_medicamento: obtenerValorGrupo("toma_medicamento"),
-                    cual_2: document.getElementById("cual_2").innerText.trim(),
-                    religion: document.getElementById("religion").innerText.trim(),
-                    estudio_tecnico_profesional: obtenerValorGrupo("estudio_tecnico_profesional"),
-                    escriba_estudio: document.getElementById("escriba_estudio").innerText.trim(),
-                    fecha_img: document.getElementById("fecha_img").innerText.trim()
-                };
+        submitBtn.onclick = async () => {
+    try {
 
-                const familiares = [];
+        const datos = {
+            apellido_paterno: document.getElementById("apellido_paterno").innerText.trim(),
+            apellido_materno: document.getElementById("apellido_materno").innerText.trim(),
+            nombres: document.getElementById("nombres").innerText.trim(),
+            dni: document.getElementById("dni").innerText.trim()
+        };
 
-                document.querySelectorAll("#family-rows tr").forEach(row => {
-                    const familiar = {
-                        dni_estudiante: document.getElementById("dni").innerText.trim(),
-                        nombre_familiar: row.querySelector(".nombre_familiar") ? row.querySelector(".nombre_familiar").innerText.trim() : "",
-                        parentesco: row.querySelector(".parentesco") ? row.querySelector(".parentesco").innerText.trim() : "",
-                        sexo: row.querySelector(".sexo_familiar") ? row.querySelector(".sexo_familiar").innerText.trim() : "",
-                        edad: row.querySelector(".edad_familiar") ? row.querySelector(".edad_familiar").innerText.trim() : "",
-                        estado_civil: row.querySelector(".estado_civil_familiar") ? row.querySelector(".estado_civil_familiar").innerText.trim() : "",
-                        grado_instruccion: row.querySelector(".grado_instruccion") ? row.querySelector(".grado_instruccion").innerText.trim() : "",
-                        ocupacion: row.querySelector(".ocupacion_familiar") ? row.querySelector(".ocupacion_familiar").innerText.trim() : "",
-                        ingreso: row.querySelector(".ingreso-familiar") ? row.querySelector(".ingreso-familiar").innerText.trim() : "",
-                    };
+        const familiares = [];
 
-                    if (familiar.nombre_familiar !== "") {
-                        familiares.push(familiar);
-                    }
-                });
+        document.querySelectorAll("#family-rows tr").forEach(row => {
+            familiares.push({
+                dni_estudiante: datos.dni,
+                nombre_familiar: row.querySelector(".nombre_familiar")?.innerText.trim() || "",
+                parentesco: row.querySelector(".parentesco")?.innerText.trim() || "",
+                sexo: row.querySelector(".sexo_familiar")?.innerText.trim() || "",
+                edad: row.querySelector(".edad_familiar")?.innerText.trim() || "",
+                estado_civil: row.querySelector(".estado_civil_familiar")?.innerText.trim() || "",
+                grado_instruccion: row.querySelector(".grado_instruccion")?.innerText.trim() || "",
+                ocupacion: row.querySelector(".ocupacion_familiar")?.innerText.trim() || "",
+                ingreso: row.querySelector(".ingreso-familiar")?.innerText.trim() || ""
+            });
+        });
 
-                console.log(datos);
+        const firmas = {
+            firma_estudiante: signaturePad1.isEmpty() ? "" : signaturePad1.toDataURL(),
+            firma_padre: signaturePad2.isEmpty() ? "" : signaturePad2.toDataURL(),
+            vb_bienestar: signaturePad3.isEmpty() ? "" : signaturePad3.toDataURL()
+        };
 
-                const payload = {
-  datos,
-  familiares,
-  firmas: {
-    firma_estudiante: signaturePad1.toDataURL(),
-    firma_padre: signaturePad2.toDataURL(),
-    vb_bienestar: signaturePad3.toDataURL()
-  }
-};
-                await fetch("https://script.google.com/macros/s/AKfycbx6nDCVOzrmV3NgacEcJvKNtbgihNlA2q0bS-9fowkwUjgkxZ8D1EM-_578zyEfS1hySQ/exec", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(payload)
-});
+        const payload = {
+            datos,
+            familiares,
+            firmas
+        };
 
-alert("Datos enviados correctamente");
+        console.log(payload);
 
-            } catch (error) {
-                console.error(error);
+        const response = await fetch("https://script.google.com/macros/s/AKfycbx6nDCVOzrmV3NgacEcJvKNtbgihNlA2q0bS-9fowkwUjgkxZ8D1EM-_578zyEfS1hySQ/exec", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-                alert(
-                    "ERROR:\n\n" +
-                    error.message +
-                    "\n\n" +
-                    error.stack
-                );
-            }
+        const result = await response.json();
+
+        console.log(result);
+
+        if (result.status === "success") {
+            alert("Guardado correctamente");
+            successMsg.classList.remove("hidden");
+        } else {
+            alert("Error: " + result.message);
         }
+
+    } catch (error) {
+        console.error(error);
+        alert("Error al enviar");
+    }
+};
 
         // Manejo de placeholders
         document.querySelectorAll('.editable').forEach(el => {
